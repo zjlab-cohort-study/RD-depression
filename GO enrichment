@@ -1,0 +1,308 @@
+# ===============================
+# GO enrichment
+# ===============================
+# 本脚本用于进行GO数据库的通路富集分析
+# 包含BP（生物学过程）、CC（细胞成分）、MF（分子功能）三个分类
+# 输入文件：R.txt （第一列为基因名称，一行一个）
+# 输出文件：GO.txt、GO_barplot.pdf、GO_bubble.pdf、GO_barplot_color.pdf、GO_circlize.pdf
+
+rm(list = ls())
+
+# ======== 加载必要包 ========
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(enrichplot)
+library(ggplot2)
+library(ggpubr)
+library(circlize)
+library(RColorBrewer)
+library(dplyr)
+library(ComplexHeatmap)
+
+# ======== 参数设置 ========
+pvalueFilter <- 0.05      # p值过滤条件
+p.adjustFilter <- 0.05    # 矫正后的p值过滤条件
+
+# 定义图形的颜色
+colorSel <- "p.adjust"
+if (p.adjustFilter > 0.05) {
+  colorSel <- "pvalue"
+}
+
+# ======== 设置工作目录和输入文件 ========
+working_dir <- "GO_enrichment"
+input_file <- file.path(working_dir, "proteins.txt")
+output_dir <- working_dir
+
+# 检查目录是否存在，不存在则创建
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+setwd(output_dir)
+
+# ======== 读取输入文件 ========
+cat("========================================\n")
+cat("GO通路富集分析开始\n")
+cat("========================================\n\n")
+
+if (!file.exists(input_file)) {
+  cat("✗ 错误：找不到输入文件 ", input_file, "\n")
+  cat("请确保R.txt文件存在于以下位置：\n")
+  cat(input_file, "\n")
+  stop("输入文件不存在")
+}
+
+rt <- read.table(input_file, header = FALSE, sep = "\t", check.names = FALSE)
+cat(sprintf("✓ 成功读取输入文件，包含 %d 个基因\n\n", nrow(rt)))
+
+# ======== 基因ID转换 ========
+cat("进行基因ID转换...\n")
+
+# 提取基因的名称（第一列）
+genes <- unique(as.vector(rt[, 1]))
+cat(sprintf("  - 独特基因数: %d\n", length(genes)))
+
+# 将基因名字转换为 EntrezID
+entrezIDs <- mget(genes, org.Hs.egSYMBOL2EG, ifnotfound = NA)
+entrezIDs <- as.character(entrezIDs)
+
+# 去除基因ID为NA的基因
+gene <- entrezIDs[entrezIDs != "NA"]
+cat(sprintf("  - 成功转换的基因数: %d\n", length(gene)))
+
+if (length(gene) == 0) {
+  cat("\n✗ 错误：没有基因成功转换为EntrezID\n")
+  stop("基因转换失败")
+}
+cat("✓ 基因ID转换完成\n\n")
+
+# ======== GO富集分析 ========
+cat("进行GO富集分析...\n")
+
+kk <- enrichGO(gene = gene, OrgDb = org.Hs.eg.db, pvalueCutoff = 1, qvalueCutoff = 1, 
+               ont = "all", readable = TRUE)
+GO <- as.data.frame(kk)
+
+cat(sprintf("  - 初始条目数: %d\n", nrow(GO)))
+
+# 根据p值和调整后p值过滤
+GO <- GO[(GO$pvalue < pvalueFilter & GO$p.adjust < p.adjustFilter), ]
+cat(sprintf("  - 显著条目数(p<%.2f, p.adjust<%.2f): %d\n", 
+            pvalueFilter, p.adjustFilter, nrow(GO)))
+
+# 统计各个分类的条目数
+GO_BP <- sum(GO$ONTOLOGY == "BP")
+GO_CC <- sum(GO$ONTOLOGY == "CC")
+GO_MF <- sum(GO$ONTOLOGY == "MF")
+cat(sprintf("    - BP (生物学过程): %d\n", GO_BP))
+cat(sprintf("    - CC (细胞成分): %d\n", GO_CC))
+cat(sprintf("    - MF (分子功能): %d\n", GO_MF))
+
+# 保存显著富集的结果
+output_file <- file.path(output_dir, "GO.txt")
+write.table(GO, file = output_file, sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("✓ GO结果已保存: %s\n\n", output_file))
+
+# ======== 绘图 ========
+cat("开始绘图...\n")
+
+# 1. 柱状图（按ONTOLOGY分类）
+cat("  - 绘制柱状图...\n")
+pdf(file = "GO_barplot.pdf", width = 16, height = 14)
+bar <- barplot(kk, drop = TRUE, showCategory = 10, label_format = 100, 
+               split = "ONTOLOGY", color = colorSel) + facet_grid(ONTOLOGY ~ ., scale = "free")
+print(bar)
+dev.off()
+cat("    ✓ 保存: GO_barplot.pdf\n")
+
+# 2. 气泡图（按ONTOLOGY分类）
+cat("  - 绘制气泡图...\n")
+pdf(file = "GO_bubble.pdf", width = 16, height = 14)
+bub <- dotplot(kk, showCategory = 10, orderBy = "GeneRatio", label_format = 100, 
+               split = "ONTOLOGY", color = colorSel) + facet_grid(ONTOLOGY ~ ., scale = "free")
+print(bub)
+dev.off()
+cat("    ✓ 保存: GO_bubble.pdf\n")
+
+# 3. 分类柱状图（彩色）
+if (nrow(GO) > 0) {
+  cat("  - 绘制分类柱状图...\n")
+  data <- GO %>% group_by(ONTOLOGY) %>% slice_head(n = 10)
+  
+  pdf(file = "GO_barplot_color.pdf", width = 22, height = 16)
+  ggbarplot(data, x = "Description", y = "Count", 
+            fill = "ONTOLOGY", color = "white", xlab = "",
+            palette = "aaas",
+            legend = "right",
+            sort.val = "desc",
+            sort.by.groups = TRUE) +
+    rotate_x_text(75) +
+    theme(panel.background = element_blank(), 
+          axis.text.x = element_text(size = 10, color = "black")) +
+    scale_y_continuous(expand = c(0, 0)) + 
+    scale_x_discrete(expand = c(0, 0))
+  dev.off()
+  cat("    ✓ 保存: GO_barplot_color.pdf\n")
+} else {
+  cat("    ⚠ 没有显著条目，跳过分类柱状图\n")
+}
+
+# 4. GO圈图
+if (nrow(GO) > 0) {
+  cat("  - 绘制GO圈图...\n")
+  
+  # 定义分类颜色
+  ontology.col <- c("#00CC33FF", "#FFC20AFF", "#CC33FFFF")  # BP, CC, MF
+  
+  # 选择最显著的条目
+  data <- GO[order(GO$p.adjust), ]
+  datasig <- data[data$pvalue < 0.05, , drop = FALSE]
+  
+  # 分别选择BP、CC、MF各6个
+  BP <- datasig[datasig$ONTOLOGY == "BP", , drop = FALSE]
+  CC <- datasig[datasig$ONTOLOGY == "CC", , drop = FALSE]
+  MF <- datasig[datasig$ONTOLOGY == "MF", , drop = FALSE]
+  
+  BP <- head(BP, 6)
+  CC <- head(CC, 6)
+  MF <- head(MF, 6)
+  
+  data <- rbind(BP, CC, MF)
+  
+  if (nrow(data) > 0) {
+    main.col <- ontology.col[as.numeric(as.factor(data$ONTOLOGY))]
+    
+    # 整理圈图数据
+    BgGene <- as.numeric(sapply(strsplit(data$BgRatio, "/"), "[", 1))
+    Gene <- as.numeric(sapply(strsplit(data$GeneRatio, "/"), "[", 1))
+    ratio <- Gene / BgGene
+    logpvalue <- -log(data$pvalue, 10)
+    logpvalue.col <- brewer.pal(n = 8, name = "Reds")
+    f <- colorRamp2(breaks = c(0, 2, 4, 6, 8, 10, 15, 20), colors = logpvalue.col)
+    BgGene.col <- f(logpvalue)
+    
+    df <- data.frame(GO = data$ID, start = 1, end = max(BgGene))
+    rownames(df) <- df$GO
+    bed2 <- data.frame(GO = data$ID, start = 1, end = BgGene, BgGene = BgGene, BgGene.col = BgGene.col)
+    bed3 <- data.frame(GO = data$ID, start = 1, end = Gene, BgGene = Gene)
+    bed4 <- data.frame(GO = data$ID, start = 1, end = max(BgGene), ratio = ratio, col = main.col)
+    bed4$ratio <- bed4$ratio / max(bed4$ratio) * 9.5
+    
+    # 绘制圈图
+    pdf(file = "GO_circlize.pdf", width = 10, height = 10)
+    par(omi = c(0.1, 0.1, 0.1, 1.5))
+    circos.par(track.margin = c(0.01, 0.01))
+    circos.genomicInitialize(df, plotType = "none")
+    
+    circos.trackPlotRegion(ylim = c(0, 1), panel.fun = function(x, y) {
+      sector.index <- get.cell.meta.data("sector.index")
+      xlim <- get.cell.meta.data("xlim")
+      ylim <- get.cell.meta.data("ylim")
+      circos.text(mean(xlim), mean(ylim), sector.index, cex = 0.8, 
+                  facing = "bending.inside", niceFacing = TRUE)
+    }, track.height = 0.08, bg.border = NA, bg.col = main.col)
+    
+    for (si in get.all.sector.index()) {
+      circos.axis(h = "top", labels.cex = 0.6, sector.index = si, track.index = 1,
+                  major.at = seq(0, max(BgGene), by = 100), labels.facing = "clockwise")
+    }
+    
+    circos.genomicTrack(bed2, ylim = c(0, 1), track.height = 0.1, bg.border = "white",
+                        panel.fun = function(region, value, ...) {
+                          i <- getI(...)
+                          circos.genomicRect(region, value, ytop = 0, ybottom = 1, col = value[, 2],
+                                           border = NA, ...)
+                          circos.genomicText(region, value, y = 0.4, labels = value[, 1], 
+                                           adj = 0, cex = 0.8, ...)
+                        })
+    
+    circos.genomicTrack(bed3, ylim = c(0, 1), track.height = 0.1, bg.border = "white",
+                        panel.fun = function(region, value, ...) {
+                          i <- getI(...)
+                          circos.genomicRect(region, value, ytop = 0, ybottom = 1, col = "#BA55D3",
+                                           border = NA, ...)
+                          circos.genomicText(region, value, y = 0.4, labels = value[, 1], 
+                                           cex = 0.9, adj = 0, ...)
+                        })
+    
+    circos.genomicTrack(bed4, ylim = c(0, 10), track.height = 0.35, bg.border = "white", bg.col = "grey90",
+                        panel.fun = function(region, value, ...) {
+                          cell.xlim <- get.cell.meta.data("cell.xlim")
+                          cell.ylim <- get.cell.meta.data("cell.ylim")
+                          for (j in 1:9) {
+                            y <- cell.ylim[1] + (cell.ylim[2] - cell.ylim[1]) / 10 * j
+                            circos.lines(cell.xlim, c(y, y), col = "#FFFFFF", lwd = 0.3)
+                          }
+                          circos.genomicRect(region, value, ytop = 0, ybottom = value[, 1], 
+                                           col = value[, 2], border = NA, ...)
+                        })
+    
+    circos.clear()
+    
+    # 绘制图例
+    middle.legend <- Legend(
+      labels = c("Number of Genes", "Number of Select", "Rich Factor(0-1)"),
+      type = "points", pch = c(15, 15, 17),
+      legend_gp = gpar(col = c("pink", "#BA55D3", ontology.col[1])),
+      title = "", nrow = 3, size = unit(3, "mm")
+    )
+    circle_size <- unit(1, "snpc")
+    draw(middle.legend, x = circle_size * 0.42)
+    
+    main.legend <- Legend(
+      labels = c("Biological Process", "Cellular Component", "Molecular Function"),
+      type = "points", pch = 15,
+      legend_gp = gpar(col = ontology.col), title_position = "topcenter",
+      title = "ONTOLOGY", nrow = 3, size = unit(3, "mm"),
+      grid_height = unit(5, "mm"), grid_width = unit(5, "mm")
+    )
+    
+    logp.legend <- Legend(
+      labels = c("(0,2]", "(2,4]", "(4,6]", "(6,8]", "(8,10]", "(10,15]", "(15,20]", ">=20"),
+      type = "points", pch = 16, legend_gp = gpar(col = logpvalue.col),
+      title = "-log10(Pvalue)", title_position = "topcenter",
+      grid_height = unit(5, "mm"), grid_width = unit(5, "mm"),
+      size = unit(3, "mm")
+    )
+    
+    lgd <- packLegend(main.legend, logp.legend)
+    draw(lgd, x = circle_size * 0.85, y = circle_size * 0.55, just = "left")
+    
+    dev.off()
+    cat("    ✓ 保存: GO_circlize.pdf\n")
+  } else {
+    cat("    ⚠ 没有符合圈图条件的数据，跳过圈图\n")
+  }
+} else {
+  cat("    ⚠ 没有显著条目，跳过GO圈图\n")
+}
+
+# ======== 追加：Lollipop 图（与 KEGG 相同格式） ========
+if (nrow(GO) > 0) {
+  cat("  - 绘制 Lollipop 图 (与 KEGG 格式一致, top10 by p.adjust)...\n")
+  # 选择按校正后 p 值最显著的前10项以保证图示清晰
+  topn <- GO %>% arrange(p.adjust) %>% head(12)
+  # 保证因子顺序便于翻转显示
+  topn$Description <- factor(topn$Description, levels = rev(topn$Description))
+
+  pdf(file = "GO_lollipop.pdf", width = 9.5, height = 6)
+  print(ggdotchart(topn, x = "Description", y = "Count", 
+             color = "ONTOLOGY", group = "ONTOLOGY", xlab = "",
+             palette = "aaas",
+             legend = "right",
+             sorting = "descending",
+             add = "segments",
+             rotate = TRUE,
+             dot.size = 7,
+             label = round(topn$Count),
+             font.label = list(color = "white", size = 12, vjust = 0.5),
+             ggtheme = theme_pubr()))
+  dev.off()
+  cat("    ✓ 保存: GO_lollipop.pdf\n")
+} else {
+  cat("    ⚠ 未生成 Lollipop 图，因无显著 GO 条目\n")
+}
+
+cat("========================================\n")
+cat(sprintf("结果文件已保存到: %s\n", output_dir))
