@@ -278,12 +278,10 @@ if (nrow(GO) > 0) {
   cat("    ⚠ 没有显著条目，跳过GO圈图\n")
 }
 
-# ======== 追加：Lollipop 图（与 KEGG 相同格式） ========
+# 5. Lollipop图
 if (nrow(GO) > 0) {
-  cat("  - 绘制 Lollipop 图 (与 KEGG 格式一致, top10 by p.adjust)...\n")
-  # 选择按校正后 p 值最显著的前10项以保证图示清晰
   topn <- GO %>% arrange(p.adjust) %>% head(12)
-  # 保证因子顺序便于翻转显示
+  
   topn$Description <- factor(topn$Description, levels = rev(topn$Description))
 
   pdf(file = "GO_lollipop.pdf", width = 9.5, height = 6)
