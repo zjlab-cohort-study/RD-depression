@@ -37,6 +37,9 @@ Due to data access restrictions, raw data are not included. Scripts are provided
 - `association_RD_inflammatory.R`  
   Test associations between inflammatory markers and RD / depression.
 
+- `Cox_nonliear_mediator.R`  
+  Restricted cubic spline analysis for dose–response relationship in inflammatory markers and incident depression.
+
 - `mediation_analysis.R`  
   Bootstrap-based mediation analysis of inflammatory markers.
 
@@ -55,12 +58,11 @@ Due to data access restrictions, raw data are not included. Scripts are provided
 ---
 
 ### 5. Proteomics and machine learning
-
-- `feature_selection.py`  
-  Two-stage feature selection pipeline.
-
-- `train_model.py`  
-  Train and evaluate prediction models.
+- `GO enrichment.R`  
+  Pathway enrichment analysis and plot.
+  
+- `machine learning`  
+  All python scripts used for modeling and plotting.
 
 ---
 
