@@ -87,12 +87,12 @@ def main():
     parser.add_argument(
         "--input",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/processed/earlyRD_clean_for_screening.csv"
+        default="earlyRD_clean_for_screening.csv"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml"
+        default="earlyRD_protein_ml"
     )
     parser.add_argument("--topk", type=int, default=200)
     args = parser.parse_args()
