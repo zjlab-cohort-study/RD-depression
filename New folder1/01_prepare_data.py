@@ -12,12 +12,12 @@ def main():
     parser.add_argument(
         "--input",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/data/raw/earlyRD_proteins_modeling.csv"
+        default="earlyRD_proteins_modeling.csv"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml"
+        default="earlyRD_protein_ml"
     )
     args = parser.parse_args()
 
