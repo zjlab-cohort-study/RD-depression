@@ -28,9 +28,7 @@ def determine_stop_k_auc_delta(auc_list, delta=0.005):
 
 
 def build_gradient_colors(n):
-    """
-    生成从深蓝到浅灰蓝的渐变，接近参考图
-    """
+    
     cmap = LinearSegmentedColormap.from_list(
         "custom_blue_grad",
         ["#2d4373", "#3e6997", "#5d8aad", "#85abc1", "#b9cad8", "#d9dee7"]
@@ -116,12 +114,12 @@ def main():
     parser.add_argument(
         "--input_csv",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step5_forward_selection/forward_selection_full_evaluation.csv"
+        default="forward_selection_full_evaluation.csv"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step5_forward_selection_replot"
+        default="step5_forward_selection_replot"
     )
     parser.add_argument("--delta_auc", type=float, default=0.005)
     parser.add_argument("--topn", type=int, default=20)
