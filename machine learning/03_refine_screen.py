@@ -93,8 +93,7 @@ def refine_xgb_like_gbdt(X, y):
         random_state=42
     )
     clf.fit(X, y)
-    # 用 permutation-free 的简单 proxy：逐列置零前后决策值变化不方便，这里退而求其次，
-    # 采用训练后单变量AUC偏离作为再排序 proxy，保证代码稳定。
+    
     rows = []
     for c in X.columns:
         try:
@@ -130,12 +129,12 @@ def main():
     parser.add_argument(
         "--input",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/processed/earlyRD_clean_for_screening.csv"
+        default="earlyRD_clean_for_screening.csv"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml"
+        default="earlyRD_protein_ml"
     )
     parser.add_argument("--coarse_topk", type=int, default=200)
     parser.add_argument("--refine_topk", type=int, default=20)
