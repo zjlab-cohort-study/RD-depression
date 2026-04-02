@@ -116,12 +116,12 @@ def main():
     parser.add_argument(
         "--input_csv",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step5_forward_selection/forward_selection_full_evaluation.csv"
+        default="forward_selection_full_evaluation.csv"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step5_forward_selection_replot"
+        default="step5_forward_selection_replot"
     )
     parser.add_argument("--delta_auc", type=float, default=0.005)
     parser.add_argument("--topn", type=int, default=20)
