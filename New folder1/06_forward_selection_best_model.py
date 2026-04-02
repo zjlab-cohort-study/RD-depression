@@ -135,12 +135,7 @@ def parse_feature_set_name(tag):
 
 
 def auc_delong_approx_test(y_true, pred1, pred2):
-    """
-    这里给一个稳定可运行的近似检验：
-    用 bootstrap 差值分布近似 AUC difference 的双侧P值
-    不是严格原始 DeLong 实现，但可作为当前流程中的稳定近似。
-    输出 pvalue, auc1, auc2, diff
-    """
+    
     auc1 = roc_auc_score(y_true, pred1)
     auc2 = roc_auc_score(y_true, pred2)
     diff = auc2 - auc1
@@ -242,10 +237,7 @@ def get_ranked_features_by_permutation(model, X, y, seed=42):
 
 
 def determine_stop_k_auc_delta(auc_list, delta=0.001, extra_steps=5, max_k=20):
-    """
-    若连续两步增量都 < delta，则在当前k处认为达到阈值；
-    但最终计算终点 = min(stop_k + extra_steps, max_k)
-    """
+   
     stop_k = None
     for k in range(1, len(auc_list) - 1):
         d1 = auc_list[k] - auc_list[k - 1]
@@ -262,11 +254,7 @@ def determine_stop_k_auc_delta(auc_list, delta=0.001, extra_steps=5, max_k=20):
 
 
 def determine_stop_k_pvalue(y, pred_list, p_thresh=0.05, extra_steps=5, max_k=20):
-    """
-    若 k->k+1 与 k+1->k+2 这两次比较均 P > p_thresh，则在k处认定停止；
-    但继续向后再算 extra_steps 个蛋白。
-    pred_list: 每个k对应的oof prediction list
-    """
+   
     stop_k = None
     test_rows = []
 
@@ -305,12 +293,7 @@ def determine_stop_k_pvalue(y, pred_list, p_thresh=0.05, extra_steps=5, max_k=20
 def plot_forward_selection(
     out_png, out_pdf, eval_df, selected_k, final_k, title_note=""
 ):
-    """
-    蓝柱：importance
-    红线：selected区域
-    黑线：继续计算到final_k后的区域
-    阴影：95%CI
-    """
+    
     plot_df = eval_df.iloc[:final_k].copy().reset_index(drop=True)
 
     x = np.arange(len(plot_df))
@@ -371,22 +354,22 @@ def main():
     parser.add_argument(
         "--input",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/processed/earlyRD_clean_for_screening.csv"
+        default="earlyRD_clean_for_screening.csv"
     )
     parser.add_argument(
         "--feature_dir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/feature_sets"
+        default="feature_sets"
     )
     parser.add_argument(
         "--results_csv",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step4_modeling/all_model_results.csv"
+        default="all_model_results.csv"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step5_forward_selection"
+        default="step5_forward_selection"
     )
     parser.add_argument("--max_features", type=int, default=20)
     parser.add_argument("--delta_auc", type=float, default=0.001)
