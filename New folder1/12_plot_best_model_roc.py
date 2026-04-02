@@ -214,17 +214,17 @@ def main():
     parser.add_argument(
         "--oof",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step6_best_model_roc_empirical/best_model_oof_predictions.csv"
+        default="best_model_oof_predictions.csv"
     )
     parser.add_argument(
         "--summary_json",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step6_best_model_roc_empirical/best_model_empirical_roc_summary.json"
+        default="best_model_empirical_roc_summary.json"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step6_best_model_roc_publication"
+        default="step6_best_model_roc_publication"
     )
     parser.add_argument("--n_boot", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=42)
