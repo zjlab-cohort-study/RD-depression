@@ -120,22 +120,22 @@ def main():
     parser.add_argument(
         "--input",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/processed/earlyRD_clean_for_screening.csv"
+        default="earlyRD_clean_for_screening.csv"
     )
     parser.add_argument(
         "--feature_dir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/feature_sets"
+        default="feature_sets"
     )
     parser.add_argument(
         "--results_csv",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step4_modeling/all_model_results.csv"
+        default="all_model_results.csv"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step7_best_model_shap"
+        default="step7_best_model_shap"
     )
     parser.add_argument("--max_samples", type=int, default=1000)
     parser.add_argument("--background_samples", type=int, default=200)
