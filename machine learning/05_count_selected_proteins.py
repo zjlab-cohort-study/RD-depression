@@ -35,12 +35,12 @@ def main():
     parser.add_argument(
         "--featdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/feature_sets"
+        default="feature_sets"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step3_refine"
+        default="step3_refine"
     )
     parser.add_argument("--topk", type=int, default=20)
     args = parser.parse_args()
