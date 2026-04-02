@@ -345,22 +345,22 @@ def main():
     parser.add_argument(
         "--input",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/processed/earlyRD_clean_for_screening.csv"
+        default="earlyRD_clean_for_screening.csv"
     )
     parser.add_argument(
         "--feature_dir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/data/feature_sets"
+        default="feature_sets"
     )
     parser.add_argument(
         "--results_csv",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step4_modeling/all_model_results.csv"
+        default="all_model_results.csv"
     )
     parser.add_argument(
         "--outdir",
         type=str,
-        default="/home/wangzhaoxiang/RD_RD2DEP_ML/RE_DP_NEW/earlyRD_protein_ml/results/step8_survival_protein_only_publication"
+        default="step8_survival_protein"
     )
     parser.add_argument("--cv_folds", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)
